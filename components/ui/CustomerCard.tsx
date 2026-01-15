@@ -14,7 +14,7 @@ interface CustomerCardProps {
 
 export default function CustomerCard({ id, mobile, consent, city, pincode, productCount }: CustomerCardProps) {
   return (
-    <Link href={`/customers/${id}`}>
+    <Link href={`/admin/customers/${id}`}>
       <div className="card card-hover cursor-pointer">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center space-x-3">

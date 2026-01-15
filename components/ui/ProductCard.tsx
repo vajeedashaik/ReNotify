@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ChevronDown, ChevronUp, Package, Calendar, Store, FileText } from 'lucide-react';
 import { Product } from '@/lib/types';
 import ActionButton from './ActionButton';
@@ -13,6 +14,8 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, customerId }: ProductCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const pathname = usePathname();
+  const basePath = pathname?.startsWith('/app') ? '/app/products' : '/admin/warranty-amc';
 
   return (
     <div className="card">
@@ -65,7 +68,7 @@ export default function ProductCard({ product, customerId }: ProductCardProps) {
           </div>
           
           <div className="pt-2">
-            <Link href={`/warranty-amc/${customerId}-${product.id}`}>
+            <Link href={`${basePath}/${customerId}-${product.id}`}>
               <ActionButton fullWidth>View Warranty & AMC</ActionButton>
             </Link>
           </div>
