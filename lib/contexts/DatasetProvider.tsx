@@ -3,8 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { DatasetRow, Customer } from '../types';
 import { datasetStore } from '../data/datasetStore';
-import { mockCustomers } from '../data/mockData';
-import { transformDatasetToCustomers } from '../data/dataTransformers';
+import { supabaseService } from '../data/supabaseService';
 
 interface DatasetContextType {
   dataset: DatasetRow[];
@@ -12,6 +11,7 @@ interface DatasetContextType {
   isInitialized: boolean;
   setDataset: (rows: DatasetRow[]) => void;
   clearDataset: () => void;
+  refreshCustomers: () => Promise<void>;
 }
 
 const DatasetContext = createContext<DatasetContextType | undefined>(undefined);
@@ -20,15 +20,54 @@ export function DatasetProvider({ children }: { children: React.ReactNode }) {
   const [dataset, setDatasetState] = useState<DatasetRow[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Initialize with mock data if no dataset uploaded
+  // Check if Supabase is configured
+  const hasSupabaseConfig = typeof window !== 'undefined' && 
+    process.env.NEXT_PUBLIC_SUPABASE_URL && 
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // Fetch customers from Supabase on mount
   useEffect(() => {
-    if (!datasetStore.isInitialized() && dataset.length === 0) {
-      // Use mock data as fallback
-      setCustomers(mockCustomers);
-      setIsInitialized(true);
+    const fetchCustomers = async () => {
+      if (hasSupabaseConfig) {
+        try {
+          const fetchedCustomers = await supabaseService.getCustomers();
+          setCustomers(fetchedCustomers);
+          setIsInitialized(true);
+        } catch (error) {
+          console.error('Failed to fetch customers from Supabase:', error);
+          setCustomers([]);
+          setIsInitialized(false);
+        }
+      } else {
+        // If Supabase not configured, check dataset store
+        if (datasetStore.isInitialized()) {
+          setCustomers(datasetStore.getAllCustomers());
+          setDatasetState(datasetStore.getDataset());
+          setIsInitialized(true);
+        } else {
+          setCustomers([]);
+          setIsInitialized(false);
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchCustomers();
+  }, [hasSupabaseConfig]);
+
+  const refreshCustomers = async () => {
+    if (hasSupabaseConfig) {
+      try {
+        const fetchedCustomers = await supabaseService.getCustomers();
+        setCustomers(fetchedCustomers);
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Failed to refresh customers:', error);
+      }
     }
-  }, []);
+  };
 
   const setDataset = (rows: DatasetRow[]) => {
     datasetStore.setDataset(rows);
@@ -44,15 +83,6 @@ export function DatasetProvider({ children }: { children: React.ReactNode }) {
     setIsInitialized(false);
   };
 
-  // Sync with store
-  useEffect(() => {
-    if (datasetStore.isInitialized()) {
-      setCustomers(datasetStore.getAllCustomers());
-      setDatasetState(datasetStore.getDataset());
-      setIsInitialized(true);
-    }
-  }, []);
-
   return (
     <DatasetContext.Provider
       value={{
@@ -61,6 +91,7 @@ export function DatasetProvider({ children }: { children: React.ReactNode }) {
         isInitialized,
         setDataset,
         clearDataset,
+        refreshCustomers,
       }}
     >
       {children}

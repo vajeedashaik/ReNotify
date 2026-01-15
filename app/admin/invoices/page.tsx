@@ -1,19 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, FileText, Store, Calendar, Package, DollarSign } from 'lucide-react';
-import { useDataset } from '@/lib/contexts/DatasetProvider';
-import { datasetStore } from '@/lib/data/datasetStore';
 import { Invoice } from '@/lib/types';
 
 export default function InvoicesPage() {
-  const { isInitialized } = useDataset();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const invoices = isInitialized && datasetStore.isInitialized()
-    ? datasetStore.getAllInvoices()
-    : [];
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
+  const fetchInvoices = async () => {
+    try {
+      const response = await fetch('/api/admin/invoices');
+      if (response.ok) {
+        const data = await response.json();
+        setInvoices(data.invoices || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch invoices:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredInvoices = invoices.filter((invoice) => {
     const query = searchQuery.toLowerCase();
@@ -48,7 +61,11 @@ export default function InvoicesPage() {
       </div>
 
       {/* Invoice Cards */}
-      {filteredInvoices.length === 0 ? (
+      {loading ? (
+        <div className="card text-center py-12">
+          <p className="text-gray-500">Loading invoices...</p>
+        </div>
+      ) : filteredInvoices.length === 0 ? (
         <div className="card text-center py-12">
           <FileText size={48} className="mx-auto mb-4 text-gray-300" />
           <p className="text-gray-500 text-lg">No invoices found</p>

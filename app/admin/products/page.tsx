@@ -1,22 +1,35 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Package, Search } from 'lucide-react';
-import { useDataset } from '@/lib/contexts/DatasetProvider';
-import { datasetStore } from '@/lib/data/datasetStore';
 import StatusBadge from '@/components/ui/StatusBadge';
 import Link from 'next/link';
 
 export default function ProductsPage() {
-  const { isInitialized } = useDataset();
   const [searchQuery, setSearchQuery] = useState('');
   const [brandFilter, setBrandFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [warrantyFilter, setWarrantyFilter] = useState('all');
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const allProducts = isInitialized && datasetStore.isInitialized()
-    ? datasetStore.getAllProducts()
-    : [];
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('/api/admin/products');
+      if (response.ok) {
+        const data = await response.json();
+        setAllProducts(data.products || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const brands = useMemo(() => {
     const uniqueBrands = Array.from(new Set(allProducts.map(p => p.brand)));
@@ -107,7 +120,11 @@ export default function ProductsPage() {
       </div>
 
       {/* Products Grid */}
-      {filteredProducts.length === 0 ? (
+      {loading ? (
+        <div className="card text-center py-12">
+          <p className="text-gray-500">Loading products...</p>
+        </div>
+      ) : filteredProducts.length === 0 ? (
         <div className="card text-center py-12">
           <Package size={48} className="mx-auto mb-4 text-gray-300" />
           <p className="text-gray-500 text-lg">No products found</p>

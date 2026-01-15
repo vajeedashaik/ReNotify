@@ -1,31 +1,51 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import KPISection from '@/components/sections/KPISection';
 import QuickActions from '@/components/sections/QuickActions';
 import ActivityFeed from '@/components/sections/ActivityFeed';
-import { useDataset } from '@/lib/contexts/DatasetProvider';
-import { datasetStore } from '@/lib/data/datasetStore';
-import { mockActivities } from '@/lib/data/mockData';
+import { useAdminAuth } from '@/lib/contexts/AdminAuthProvider';
+import { createClient } from '@/lib/supabase/client';
 
 export default function AdminDashboard() {
-  const { customers, isInitialized } = useDataset();
+  const { user, isAuthenticated } = useAdminAuth();
+  const [kpis, setKpis] = useState({
+    totalCustomers: 0,
+    activeWarranties: 0,
+    activeAMCs: 0,
+    upcomingServices: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
-  // Get KPIs from dataset store
-  const kpis = isInitialized && datasetStore.isInitialized()
-    ? datasetStore.getKPIs()
-    : {
-        totalCustomers: customers.length,
-        activeWarranties: customers.reduce((acc, c) => 
-          acc + c.products.filter(p => p.warranty.status === 'active').length, 0
-        ),
-        activeAMCs: customers.reduce((acc, c) => 
-          acc + c.products.filter(p => p.amc.status === 'active').length, 0
-        ),
-        upcomingServices: customers.reduce((acc, c) => 
-          acc + c.products.filter(p => p.service_reminder.days_until_due <= 30).length, 0
-        ),
-      };
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchStats();
+    }
+  }, [isAuthenticated, user]);
+
+  const fetchStats = async () => {
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) return;
+
+      const response = await fetch('/api/admin/stats', {
+        headers: {
+          'x-user-id': session.user.id,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setKpis(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -34,28 +54,24 @@ export default function AdminDashboard() {
         <p className="text-gray-600">Welcome back! Here's what's happening with your customers.</p>
       </div>
 
-      {!isInitialized && (
-        <div className="card mb-6 bg-yellow-50 border-yellow-200">
-          <p className="text-yellow-800">
-            <strong>No dataset loaded.</strong> Please{' '}
-            <a href="/admin/upload" className="underline font-medium">
-              upload a dataset
-            </a>{' '}
-            to view data.
-          </p>
+      {loading ? (
+        <div className="card text-center py-12">
+          <p className="text-gray-500">Loading statistics...</p>
         </div>
+      ) : (
+        <>
+          <KPISection
+            totalCustomers={kpis.totalCustomers}
+            activeWarranties={kpis.activeWarranties}
+            activeAMCs={kpis.activeAMCs}
+            upcomingServices={kpis.upcomingServices}
+          />
+
+          <QuickActions />
+
+          <ActivityFeed activities={[]} />
+        </>
       )}
-
-      <KPISection
-        totalCustomers={kpis.totalCustomers}
-        activeWarranties={kpis.activeWarranties}
-        activeAMCs={kpis.activeAMCs}
-        upcomingServices={kpis.upcomingServices}
-      />
-
-      <QuickActions />
-
-      <ActivityFeed activities={mockActivities} />
     </div>
   );
 }

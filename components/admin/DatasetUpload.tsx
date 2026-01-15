@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Upload, File, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { parseExcelFile, parseCSVFile } from '@/lib/utils/datasetParser';
-import { useDataset } from '@/lib/contexts/DatasetProvider';
+import { useAdminAuth } from '@/lib/contexts/AdminAuthProvider';
 import ActionButton from '../ui/ActionButton';
+import { createClient } from '@/lib/supabase/client';
 
 export default function DatasetUpload() {
   const [file, setFile] = useState<File | null>(null);
@@ -16,7 +16,16 @@ export default function DatasetUpload() {
     warnings?: string[];
     rowCount?: number;
   } | null>(null);
-  const { setDataset } = useDataset();
+  const { user } = useAdminAuth();
+  const [supabase, setSupabase] = useState<any>(null);
+
+  useEffect(() => {
+    try {
+      setSupabase(createClient());
+    } catch (error) {
+      console.error('Failed to create Supabase client:', error);
+    }
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -27,46 +36,85 @@ export default function DatasetUpload() {
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || !user) {
+      setResult({
+        success: false,
+        message: 'You must be logged in to upload datasets.',
+      });
+      return;
+    }
 
     setUploading(true);
     setResult(null);
 
     try {
-      const fileExtension = file.name.split('.').pop()?.toLowerCase();
-      let parseResult;
+      // Check if Supabase is configured
+      const hasSupabaseConfig = process.env.NEXT_PUBLIC_SUPABASE_URL && 
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-      if (fileExtension === 'xlsx' || fileExtension === 'xls') {
-        parseResult = await parseExcelFile(file);
-      } else if (fileExtension === 'csv') {
-        parseResult = await parseCSVFile(file);
+      let userId: string;
+
+      if (hasSupabaseConfig && supabase) {
+        // Get current session to get user ID
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.user) {
+          setResult({
+            success: false,
+            message: 'You must be logged in to upload datasets.',
+          });
+          setUploading(false);
+          return;
+        }
+
+        userId = session.user.id;
       } else {
-        setResult({
-          success: false,
-          message: 'Unsupported file format. Please upload Excel (.xlsx, .xls) or CSV (.csv) files.',
-        });
-        setUploading(false);
-        return;
+        // Use mock user ID when Supabase not configured
+        userId = 'mock-admin-user';
       }
 
-      if (parseResult.success) {
-        setDataset(parseResult.data);
+      // Create form data
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', userId);
+
+      // Upload to API
+      const response = await fetch('/api/admin/upload-dataset', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // If Supabase is not configured, store data in datasetStore
+        if (data.data && typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+          // Import and use datasetStore to store data
+          const { datasetStore } = await import('@/lib/data/datasetStore');
+          datasetStore.setDataset(data.data);
+        }
+
         setResult({
           success: true,
-          message: `Successfully uploaded ${parseResult.rowCount} records!`,
-          rowCount: parseResult.rowCount,
-          warnings: parseResult.warnings.length > 0 ? parseResult.warnings : undefined,
+          message: data.message || `Successfully uploaded ${data.rowCount} records!`,
+          rowCount: data.rowCount,
+          warnings: data.warnings?.length > 0 ? data.warnings : undefined,
         });
         setFile(null);
         // Reset file input
         const fileInput = document.getElementById('file-input') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
+        
+        // Refresh data by reloading the page
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } else {
         setResult({
           success: false,
-          message: 'Failed to parse file. Please check the errors below.',
-          errors: parseResult.errors,
-          warnings: parseResult.warnings.length > 0 ? parseResult.warnings : undefined,
+          message: data.error || 'Failed to upload dataset',
+          errors: data.errors,
+          warnings: data.warnings,
         });
       }
     } catch (error) {

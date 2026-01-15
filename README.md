@@ -18,34 +18,61 @@ ReNotify helps you automatically organize your bills and warranties and sends ti
 - **TypeScript** - Type-safe development
 - **Tailwind CSS** - Utility-first styling
 - **Lucide React** - Beautiful icons
+- **Supabase** - Backend (PostgreSQL + Auth + Storage)
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ and npm/yarn/pnpm
+- Supabase account (free tier works)
 
 ### Installation
 
 1. Install dependencies:
 ```bash
 npm install
-# or
-yarn install
-# or
-pnpm install
 ```
 
-2. Run the development server:
+2. Set up Supabase:
+   - Create a project at [supabase.com](https://supabase.com)
+   - Get your project URL and API keys from Project Settings → API
+   - Create `.env.local` file:
+     ```
+     NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+     NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+     SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+     ```
+
+3. Set up database:
+   - Go to Supabase Dashboard → SQL Editor
+   - Copy and paste the contents of `supabase/schema.sql`
+   - Execute the script to create tables and RLS policies
+
+4. Set up storage:
+   - Go to Storage → Create bucket named `datasets`
+   - Set it to **Private**
+   - Add policies for admin access (see `supabase/README.md`)
+
+5. Run the development server:
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-3. Open [http://localhost:3000](http://localhost:3000) in your browser
+6. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+### Creating Admin User
+
+After setting up Supabase:
+1. Sign up via the admin login page
+2. Go to Supabase Dashboard → Authentication → Users
+3. Find your user and copy the user ID
+4. Go to SQL Editor and run:
+   ```sql
+   UPDATE profiles
+   SET role = 'ADMIN'
+   WHERE id = 'your_user_id_here';
+   ```
 
 ## Project Structure
 

@@ -1,17 +1,37 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import CustomerCard from '@/components/ui/CustomerCard';
 import Filters from '@/components/sections/Filters';
-import { useDataset } from '@/lib/contexts/DatasetProvider';
+import { useAdminAuth } from '@/lib/contexts/AdminAuthProvider';
+import { supabaseService } from '@/lib/data/supabaseService';
 import { Customer } from '@/lib/types';
 
 export default function CustomersPage() {
-  const { customers } = useDataset();
+  const { isAuthenticated } = useAdminAuth();
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [consentFilter, setConsentFilter] = useState('all');
   const [cityFilter, setCityFilter] = useState('all');
   const [warrantyFilter, setWarrantyFilter] = useState('all');
   const [amcFilter, setAMCFilter] = useState('all');
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCustomers();
+    }
+  }, [isAuthenticated]);
+
+  const fetchCustomers = async () => {
+    try {
+      const data = await supabaseService.getCustomers();
+      setCustomers(data);
+    } catch (error) {
+      console.error('Failed to fetch customers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const cities = useMemo(() => {
     const uniqueCities = Array.from(new Set(customers.map(c => c.city)));
@@ -54,6 +74,14 @@ export default function CustomersPage() {
       return true;
     });
   }, [customers, consentFilter, cityFilter, warrantyFilter, amcFilter]);
+
+  if (loading) {
+    return (
+      <div className="card text-center py-12">
+        <p className="text-gray-500">Loading customers...</p>
+      </div>
+    );
+  }
 
   return (
     <div>

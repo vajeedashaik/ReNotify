@@ -1,26 +1,35 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import AlertCard from '@/components/ui/AlertCard';
 import { useCustomerAuth } from '@/lib/contexts/CustomerAuthProvider';
-import { useDataset } from '@/lib/contexts/DatasetProvider';
-import { datasetStore } from '@/lib/data/datasetStore';
 
 export default function CustomerAlertsPage() {
   const { user } = useCustomerAuth();
-  const { isInitialized } = useDataset();
   const [snoozedAlerts, setSnoozedAlerts] = useState<Set<string>>(new Set());
+  const [customerAlerts, setCustomerAlerts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const allAlerts = isInitialized && datasetStore.isInitialized()
-    ? datasetStore.getAllAlerts()
-    : [];
+  useEffect(() => {
+    if (user) {
+      fetchAlerts();
+    }
+  }, [user]);
 
-  // Filter alerts for current customer
-  const customerAlerts = useMemo(() => {
-    if (!user) return [];
-    return allAlerts.filter(alert => alert.customer_mobile === user.mobile);
-  }, [allAlerts, user]);
+  const fetchAlerts = async () => {
+    try {
+      const response = await fetch('/api/customer/alerts');
+      if (response.ok) {
+        const data = await response.json();
+        setCustomerAlerts(data.alerts || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch alerts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const activeAlerts = useMemo(() => {
     return customerAlerts.filter(alert => !snoozedAlerts.has(alert.id));
@@ -71,7 +80,11 @@ export default function CustomerAlertsPage() {
         <p className="text-gray-600">Service reminders, warranty expirations, and AMC renewals</p>
       </div>
 
-      {activeAlerts.length === 0 ? (
+      {loading ? (
+        <div className="card text-center py-12">
+          <p className="text-gray-500">Loading alerts...</p>
+        </div>
+      ) : activeAlerts.length === 0 ? (
         <div className="card text-center py-12">
           <Bell size={48} className="mx-auto mb-4 text-gray-300" />
           <p className="text-gray-500 text-lg">No active alerts</p>

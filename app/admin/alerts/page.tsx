@@ -1,19 +1,32 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Bell, AlertCircle } from 'lucide-react';
 import AlertCard from '@/components/ui/AlertCard';
-import { useDataset } from '@/lib/contexts/DatasetProvider';
-import { datasetStore } from '@/lib/data/datasetStore';
 import { Alert } from '@/lib/types';
 
 export default function AlertsPage() {
-  const { isInitialized } = useDataset();
   const [snoozedAlerts, setSnoozedAlerts] = useState<Set<string>>(new Set());
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const alerts = isInitialized && datasetStore.isInitialized()
-    ? datasetStore.getAllAlerts()
-    : [];
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
+  const fetchAlerts = async () => {
+    try {
+      const response = await fetch('/api/admin/alerts');
+      if (response.ok) {
+        const data = await response.json();
+        setAlerts(data.alerts || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch alerts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleNotify = (alertId: string) => {
     // TODO: Implement notification logic
@@ -65,7 +78,11 @@ export default function AlertsPage() {
         <p className="text-gray-600">Manage service reminders, warranty expirations, and AMC renewals</p>
       </div>
 
-      {activeAlerts.length === 0 ? (
+      {loading ? (
+        <div className="card text-center py-12">
+          <p className="text-gray-500">Loading alerts...</p>
+        </div>
+      ) : activeAlerts.length === 0 ? (
         <div className="card text-center py-12">
           <Bell size={48} className="mx-auto mb-4 text-gray-300" />
           <p className="text-gray-500 text-lg">No active alerts</p>
