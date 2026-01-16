@@ -48,30 +48,28 @@ export default function DatasetUpload() {
     setResult(null);
 
     try {
-      // Check if Supabase is configured
-      const hasSupabaseConfig = process.env.NEXT_PUBLIC_SUPABASE_URL && 
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      let userId: string;
-
-      if (hasSupabaseConfig && supabase) {
-        // Get current session to get user ID
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.user) {
-          setResult({
-            success: false,
-            message: 'You must be logged in to upload datasets.',
-          });
-          setUploading(false);
-          return;
-        }
-
-        userId = session.user.id;
-      } else {
-        // Use mock user ID when Supabase not configured
-        userId = 'mock-admin-user';
+      if (!supabase) {
+        setResult({
+          success: false,
+          message: 'Supabase client not initialized.',
+        });
+        setUploading(false);
+        return;
       }
+
+      // Get current session to get user ID
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        setResult({
+          success: false,
+          message: 'You must be logged in to upload datasets.',
+        });
+        setUploading(false);
+        return;
+      }
+
+      const userId = session.user.id;
 
       // Create form data
       const formData = new FormData();
@@ -87,13 +85,6 @@ export default function DatasetUpload() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // If Supabase is not configured, store data in datasetStore
-        if (data.data && typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-          // Import and use datasetStore to store data
-          const { datasetStore } = await import('@/lib/data/datasetStore');
-          datasetStore.setDataset(data.data);
-        }
-
         setResult({
           success: true,
           message: data.message || `Successfully uploaded ${data.rowCount} records!`,
@@ -105,9 +96,14 @@ export default function DatasetUpload() {
         const fileInput = document.getElementById('file-input') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
         
-        // Refresh data by reloading the page
+        // Trigger a custom event to notify other components
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('datasetUpdated'));
+        }
+        
+        // Navigate to dashboard
         setTimeout(() => {
-          window.location.reload();
+          window.location.href = '/admin';
         }, 2000);
       } else {
         setResult({

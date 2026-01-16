@@ -23,41 +23,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Supabase is configured
-    const hasSupabaseConfig = 
-      process.env.NEXT_PUBLIC_SUPABASE_URL && 
-      process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // Verify Supabase is configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json(
+        { error: 'Supabase is not configured. Please set up your environment variables.' },
+        { status: 500 }
+      );
+    }
 
-    // Handle mock admin user (when Supabase not configured)
-    const isMockAdmin = userId === 'mock-admin-user';
-    
-    if (isMockAdmin && !hasSupabaseConfig) {
-      // Allow upload for mock admin when Supabase not configured
-      // We'll return parsed data for client-side storage
-    } else if (hasSupabaseConfig) {
-      // Verify user is admin in Supabase
-      try {
-        const supabase = await createServiceRoleClient();
+    // Verify user is admin in Supabase
+    const supabase = await createServiceRoleClient();
 
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', userId)
-          .single();
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
 
-        if (profileError || profile?.role !== 'ADMIN') {
-          return NextResponse.json(
-            { error: 'Unauthorized: Admin access required' },
-            { status: 403 }
-          );
-        }
-      } catch (error) {
-        return NextResponse.json(
-          { error: 'Failed to verify admin access' },
-          { status: 500 }
-        );
-      }
-    } else {
+    if (profileError || profile?.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized: Admin access required' },
         { status: 403 }
@@ -89,20 +72,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // If Supabase is not configured, return data for client-side storage
-    if (isMockAdmin && !hasSupabaseConfig) {
-      return NextResponse.json({
-        success: true,
-        rowCount: parseResult.rowCount,
-        data: parseResult.data,
-        warnings: parseResult.warnings,
-        message: 'Dataset parsed successfully. Please configure Supabase to store data permanently.',
-      });
-    }
-
-    // Supabase operations (only if configured)
-    const supabase = await createServiceRoleClient();
 
     // Upload file to Supabase Storage
     const filePath = `datasets/${Date.now()}-${file.name}`;

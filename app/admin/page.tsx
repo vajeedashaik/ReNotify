@@ -23,12 +23,31 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, user]);
 
+  // Listen for dataset updates
+  useEffect(() => {
+    const handleDatasetUpdate = () => {
+      if (isAuthenticated && user) {
+        fetchStats();
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('datasetUpdated', handleDatasetUpdate);
+      return () => {
+        window.removeEventListener('datasetUpdated', handleDatasetUpdate);
+      };
+    }
+  }, [isAuthenticated, user]);
+
   const fetchStats = async () => {
     try {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (!session?.user) return;
+      if (!session?.user) {
+        setLoading(false);
+        return;
+      }
 
       const response = await fetch('/api/admin/stats', {
         headers: {
@@ -38,7 +57,12 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         const data = await response.json();
-        setKpis(data);
+        setKpis({
+          totalCustomers: data.totalCustomers || 0,
+          activeWarranties: data.activeWarranties || 0,
+          activeAMCs: data.activeAMCs || 0,
+          upcomingServices: data.upcomingServices || 0,
+        });
       }
     } catch (error) {
       console.error('Failed to fetch stats:', error);

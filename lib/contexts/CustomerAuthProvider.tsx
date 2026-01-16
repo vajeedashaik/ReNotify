@@ -28,7 +28,7 @@ export function CustomerAuthProvider({ children }: { children: React.ReactNode }
       setSupabase(createClient());
     } catch (error) {
       console.error('Failed to create Supabase client:', error);
-      setLoading(false);
+      // Don't set loading to false here - let the session check handle it
     }
   }, []);
 

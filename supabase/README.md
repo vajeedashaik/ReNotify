@@ -41,8 +41,7 @@
        AND role = 'ADMIN'
      )
      ```
-   - Allowed operation: SELECT
-   - Policy definition:
+   - Allowed operation: SELECTth
      ```sql
      EXISTS (
        SELECT 1 FROM profiles

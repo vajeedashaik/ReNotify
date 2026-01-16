@@ -22,54 +22,54 @@ export function DatasetProvider({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Check if Supabase is configured
-  const hasSupabaseConfig = typeof window !== 'undefined' && 
-    process.env.NEXT_PUBLIC_SUPABASE_URL && 
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
   // Fetch customers from Supabase on mount
   useEffect(() => {
     const fetchCustomers = async () => {
-      if (hasSupabaseConfig) {
-        try {
-          const fetchedCustomers = await supabaseService.getCustomers();
-          setCustomers(fetchedCustomers);
-          setIsInitialized(true);
-        } catch (error) {
-          console.error('Failed to fetch customers from Supabase:', error);
-          setCustomers([]);
-          setIsInitialized(false);
-        }
-      } else {
-        // If Supabase not configured, check dataset store
-        if (datasetStore.isInitialized()) {
-          setCustomers(datasetStore.getAllCustomers());
-          setDatasetState(datasetStore.getDataset());
-          setIsInitialized(true);
-        } else {
-          setCustomers([]);
-          setIsInitialized(false);
-        }
-      }
-      setLoading(false);
-    };
-
-    fetchCustomers();
-  }, [hasSupabaseConfig]);
-
-  const refreshCustomers = async () => {
-    if (hasSupabaseConfig) {
       try {
         const fetchedCustomers = await supabaseService.getCustomers();
         setCustomers(fetchedCustomers);
         setIsInitialized(true);
       } catch (error) {
-        console.error('Failed to refresh customers:', error);
+        console.error('Failed to fetch customers from Supabase:', error);
+        // If it's a configuration error, show empty state but don't crash
+        if (error instanceof Error && error.message.includes('not configured')) {
+          console.warn('Supabase not configured. Please check your .env.local file and restart the dev server.');
+        }
+        setCustomers([]);
+        setIsInitialized(false);
+      } finally {
+        setLoading(false);
       }
+    };
+
+    fetchCustomers();
+
+    // Listen for dataset updates
+    const handleDatasetUpdate = () => {
+      fetchCustomers();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('datasetUpdated', handleDatasetUpdate);
+      return () => {
+        window.removeEventListener('datasetUpdated', handleDatasetUpdate);
+      };
+    }
+  }, []);
+
+  const refreshCustomers = async () => {
+    try {
+      const fetchedCustomers = await supabaseService.getCustomers();
+      setCustomers(fetchedCustomers);
+      setIsInitialized(true);
+    } catch (error) {
+      console.error('Failed to refresh customers:', error);
     }
   };
 
   const setDataset = (rows: DatasetRow[]) => {
+    // This is mainly for backwards compatibility
+    // In production, data should come from Supabase
     datasetStore.setDataset(rows);
     setDatasetState(rows);
     setCustomers(datasetStore.getAllCustomers());

@@ -6,17 +6,9 @@ export async function createClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    // Return a mock client if env vars are not set
-    return {
-      auth: {
-        getSession: async () => ({ data: { session: null }, error: null }),
-        getUser: async () => ({ data: { user: null }, error: null }),
-      },
-      from: () => ({
-        select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }),
-        update: () => ({ eq: async () => ({ error: null }) }),
-      }),
-    } as any;
+    throw new Error(
+      'Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.'
+    );
   }
 
   const cookieStore = await cookies();
@@ -53,11 +45,21 @@ export async function createServiceRoleClient() {
     throw new Error('Supabase service role key not configured');
   }
 
+  // For service role client, we need to provide cookie methods even if we don't use them
+  // Since service role bypasses RLS, we can use empty implementations
   return createServerClient(
     supabaseUrl,
     serviceRoleKey,
     {
-      cookies: {},
+      cookies: {
+        getAll() {
+          return [];
+        },
+        setAll(cookiesToSet) {
+          // Service role client doesn't need to set cookies
+          // This is a no-op for service role operations
+        },
+      },
     }
   );
 }

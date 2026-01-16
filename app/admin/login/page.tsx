@@ -26,13 +26,21 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      const success = await login(email, password);
+      // Add timeout to prevent infinite loading
+      const loginPromise = login(email, password);
+      const timeoutPromise = new Promise<boolean>((resolve) => {
+        setTimeout(() => resolve(false), 15000); // 15 second timeout
+      });
+
+      const success = await Promise.race([loginPromise, timeoutPromise]);
+      
       if (success) {
         router.push('/admin');
       } else {
-        setError('Invalid email or password');
+        setError('Login failed. Please check your credentials and try again.');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError('Login failed. Please try again.');
     } finally {
       setLoading(false);
@@ -104,9 +112,12 @@ export default function AdminLoginPage() {
             </ActionButton>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-600 text-center">
-              Demo credentials: admin@renotify.com / admin123
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-xs text-blue-800 text-center mb-2">
+              <strong>First time setup:</strong> You need to create an admin account first.
+            </p>
+            <p className="text-xs text-blue-700 text-center">
+              Go to Supabase Dashboard → Authentication → Users → Add user, then set role to ADMIN in the profiles table.
             </p>
           </div>
         </div>

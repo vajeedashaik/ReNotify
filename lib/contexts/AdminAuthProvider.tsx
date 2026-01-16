@@ -28,16 +28,20 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       setSupabase(createClient());
     } catch (error) {
       console.error('Failed to create Supabase client:', error);
-      setLoading(false);
+      // Don't set loading to false here - let the session check handle it
+      // This allows the app to show a proper error message
     }
   }, []);
 
   // Check for existing session on mount
   useEffect(() => {
-    if (!supabase) return;
-    
     const checkSession = async () => {
       try {
+        if (!supabase) {
+          setLoading(false);
+          return;
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
@@ -107,30 +111,38 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch('/api/auth/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Login failed:', errorData.error);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Login failed:', errorData.error || `HTTP ${response.status}`);
         return false;
       }
 
       const data = await response.json();
       
       if (data.success) {
-        // Set session in Supabase client if available and not mock
-        if (supabase && data.session && data.session.access_token !== 'mock-token') {
+        // Set session in Supabase client
+        if (supabase && data.session) {
           try {
             await supabase.auth.setSession({
               access_token: data.session.access_token,
               refresh_token: data.session.refresh_token,
             });
           } catch (sessionError) {
-            console.warn('Failed to set Supabase session (may be using mock auth):', sessionError);
+            console.error('Failed to set Supabase session:', sessionError);
+            return false;
           }
         }
 
@@ -144,7 +156,11 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
       return false;
     } catch (error) {
-      console.error('Login error:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('Login request timed out');
+      } else {
+        console.error('Login error:', error);
+      }
       return false;
     }
   };
