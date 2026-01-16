@@ -10,7 +10,8 @@ export default function AdminRoute({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isAuthenticated && pathname !== '/admin/login') {
+    const publicPaths = ['/admin/login', '/admin/signup'];
+    if (!isAuthenticated && !publicPaths.includes(pathname)) {
       router.push('/admin/login');
     }
   }, [isAuthenticated, router, pathname]);

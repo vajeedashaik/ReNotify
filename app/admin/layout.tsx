@@ -12,8 +12,10 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const isLoginPage = pathname === '/admin/login';
+  const isSignupPage = pathname === '/admin/signup';
+  const isPublicPage = isLoginPage || isSignupPage;
 
-  if (isLoginPage) {
+  if (isPublicPage) {
     return <>{children}</>;
   }
 

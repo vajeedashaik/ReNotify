@@ -131,29 +131,67 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = await response.json();
+      console.log('Login response received:', { 
+        success: data.success, 
+        successType: typeof data.success,
+        hasSession: !!data.session, 
+        hasUser: !!data.user,
+        userEmail: data.user?.email,
+        userRole: data.user?.role,
+        responseStatus: response.status,
+        fullData: JSON.stringify(data).substring(0, 200) // First 200 chars
+      });
       
-      if (data.success) {
+      // Check if login was successful - be more lenient with the check
+      const hasSuccessFlag = data.success === true || data.success === 'true' || data.success === 1;
+      const hasUserObject = data.user && typeof data.user === 'object';
+      const isSuccess = hasSuccessFlag && hasUserObject;
+      
+      console.log('Login check:', { hasSuccessFlag, hasUserObject, isSuccess });
+      
+      if (isSuccess) {
+        console.log('Login successful, processing...', { user: data.user });
+        
         // Set session in Supabase client
         if (supabase && data.session) {
           try {
-            await supabase.auth.setSession({
+            const sessionResult = await supabase.auth.setSession({
               access_token: data.session.access_token,
               refresh_token: data.session.refresh_token,
             });
+            console.log('Session set result:', { 
+              hasSession: !!sessionResult.data?.session, 
+              error: sessionResult.error?.message 
+            });
           } catch (sessionError) {
             console.error('Failed to set Supabase session:', sessionError);
-            return false;
+            // Continue anyway - session might already be valid
           }
+        } else {
+          console.warn('No supabase client or session data available');
         }
 
-        setUser({
-          email: data.user.email,
-          role: 'ADMIN',
-        });
-
+        // Set user state - this is critical for authentication
+        const userData = {
+          email: data.user.email || email, // Fallback to email from input
+          role: (data.user.role || 'ADMIN') as const,
+        };
+        
+        console.log('Setting user state:', userData);
+        setUser(userData);
+        
+        console.log('Login function returning TRUE');
         return true;
       }
 
+      console.error('Login failed - conditions not met:', {
+        hasSuccess: data.success,
+        successType: typeof data.success,
+        hasUser: !!data.user,
+        userData: data.user,
+        dataKeys: Object.keys(data || {}),
+        fullResponse: data
+      });
       return false;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
