@@ -54,6 +54,16 @@ export default function AdminTopBar() {
               Upload Dataset
             </Link>
             <Link
+              href="/admin/service-centers/upload"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                pathname === '/admin/service-centers/upload'
+                  ? 'bg-primary-50 text-primary-600'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              Service Centers
+            </Link>
+            <Link
               href="/admin/customers"
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 pathname?.startsWith('/admin/customers')
@@ -148,6 +158,17 @@ export default function AdminTopBar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Upload Dataset
+              </Link>
+              <Link
+                href="/admin/service-centers/upload"
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                  pathname === '/admin/service-centers/upload'
+                    ? 'bg-primary-50 text-primary-600'
+                    : 'text-gray-700'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Service Centers
               </Link>
               <Link
                 href="/admin/customers"

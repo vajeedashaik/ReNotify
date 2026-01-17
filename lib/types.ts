@@ -110,3 +110,51 @@ export interface CustomerUser {
 }
 
 export type AuthUser = AdminUser | CustomerUser;
+
+// Service Center types
+export interface ServiceCenter {
+  service_center_id: string;
+  service_center_name: string;
+  service_center_type?: string;
+  parent_partner?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  supported_brands?: string[];
+  supported_categories?: string[];
+  warranty_supported: boolean;
+  amc_supported: boolean;
+  rating?: number;
+  contact_number?: string;
+  opening_hours?: string;
+  latitude?: number;
+  longitude?: number;
+  last_verified_at?: string | null;
+  active_status: boolean;
+  distance_km?: number; // Calculated field
+  ranking_score?: number; // Calculated field
+}
+
+// Service Center dataset row structure
+export interface ServiceCenterRow {
+  service_center_id: string;
+  service_center_name: string;
+  service_center_type?: string;
+  parent_partner?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  supported_brands?: string;
+  supported_categories?: string;
+  warranty_supported?: string | boolean;
+  amc_supported?: string | boolean;
+  rating?: string | number;
+  contact_number?: string;
+  opening_hours?: string;
+  latitude?: string | number;
+  longitude?: string | number;
+  last_verified_at?: string | null;
+  active_status?: string | boolean;
+}

@@ -146,11 +146,27 @@ export async function POST(request: NextRequest) {
 
     // Transform and insert rows into customer_products
     // Helper to ensure date strings are properly converted or null
-    const normalizeDateForDB = (dateValue: string | null): string | null => {
-      if (!dateValue || dateValue.trim() === '' || dateValue.toLowerCase() === 'null') {
+    const normalizeDateForDB = (dateValue: string | null | undefined): string | null => {
+      // Handle null, undefined, or empty values
+      if (dateValue === null || dateValue === undefined) {
         return null;
       }
-      return dateValue.trim();
+      
+      // Convert to string and trim
+      const str = String(dateValue).trim();
+      
+      // Check for empty strings or common null representations
+      if (str === '' || 
+          str.toLowerCase() === 'null' || 
+          str.toLowerCase() === 'n/a' || 
+          str.toLowerCase() === 'na' ||
+          str === '-' ||
+          str === 'NULL' ||
+          str === 'N/A') {
+        return null;
+      }
+      
+      return str;
     };
 
     const rowsToInsert = parseResult.data.map((row: DatasetRow) => ({

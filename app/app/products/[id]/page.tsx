@@ -8,6 +8,7 @@ import TimelineBar from '@/components/ui/TimelineBar';
 import ActionButton from '@/components/ui/ActionButton';
 import { useCustomerAuth } from '@/lib/contexts/CustomerAuthProvider';
 import { useRouter } from 'next/navigation';
+import FindServiceCenterButton from '@/components/customer/FindServiceCenterButton';
 
 interface ProductDetailPageProps {
   params: {
@@ -71,6 +72,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             invoice_id: foundProduct.invoice_id,
             purchase_date: foundProduct.purchase_date,
             product_category: foundProduct.product_category,
+            pincode: foundProduct.pincode,
+            city: foundProduct.city,
             warranty: {
               warranty_type: foundProduct.warranty_type || 'Standard',
               warranty_start: foundProduct.warranty_start || foundProduct.purchase_date,
@@ -169,6 +172,19 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 </div>
               )}
             </div>
+            
+            <div className="pt-4 border-t border-gray-100">
+              <FindServiceCenterButton
+                productId={product.id}
+                pincode={product.pincode}
+                city={product.city}
+                brand={product.brand}
+                productCategory={product.product_category}
+                warrantyActive={product.warranty.status === 'active'}
+                amcActive={product.amc.amc_active}
+                fullWidth
+              />
+            </div>
           </div>
         </div>
 
@@ -211,6 +227,19 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 )}
               </>
             )}
+            
+            <div className="pt-4 border-t border-gray-100">
+              <FindServiceCenterButton
+                productId={product.id}
+                pincode={product.pincode}
+                city={product.city}
+                brand={product.brand}
+                productCategory={product.product_category}
+                warrantyActive={product.warranty.status === 'active'}
+                amcActive={product.amc.amc_active}
+                fullWidth
+              />
+            </div>
           </div>
         </div>
 
@@ -242,6 +271,19 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   {product.service_reminder.days_until_due}
                 </p>
               </div>
+            </div>
+            
+            <div className="pt-4 border-t border-gray-100">
+              <FindServiceCenterButton
+                productId={product.id}
+                pincode={product.pincode}
+                city={product.city}
+                brand={product.brand}
+                productCategory={product.product_category}
+                warrantyActive={product.warranty.status === 'active'}
+                amcActive={product.amc.amc_active}
+                fullWidth
+              />
             </div>
           </div>
         </div>

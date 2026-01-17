@@ -12,14 +12,22 @@ export interface ParseResult {
 
 // Helper function to normalize date values - converts empty/null/"Null" strings to null
 function normalizeDate(value: any): string | null {
+  // Handle null, undefined, or empty values first
   if (value === null || value === undefined) {
     return null;
   }
   
+  // Convert to string and trim
   const str = String(value).trim();
   
   // Check for empty strings or common null representations
-  if (str === '' || str.toLowerCase() === 'null' || str.toLowerCase() === 'n/a' || str.toLowerCase() === 'na') {
+  if (str === '' || 
+      str.toLowerCase() === 'null' || 
+      str.toLowerCase() === 'n/a' || 
+      str.toLowerCase() === 'na' ||
+      str === '-' ||
+      str === 'NULL' ||
+      str === 'N/A') {
     return null;
   }
   
