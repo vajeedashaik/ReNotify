@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,10 +13,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify Supabase is configured
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       console.error('Missing environment variables:', {
         hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       });
       return NextResponse.json(
         { error: 'Supabase is not configured. Please set up your environment variables.' },
@@ -24,9 +24,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Use regular server client for authentication (this properly handles cookies)
     let supabase;
     try {
-      supabase = await createServiceRoleClient();
+      supabase = await createClient();
     } catch (clientError) {
       console.error('Failed to create Supabase client:', clientError);
       return NextResponse.json(
@@ -40,48 +41,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Sign in with Supabase Auth
+    // Sign in with Supabase Auth using regular client (this sets cookies properly)
     console.log('Attempting to sign in user:', email);
     
-    // Create a timeout wrapper
-    const withTimeout = <T>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
-      return Promise.race([
-        promise,
-        new Promise<T>((_, reject) => {
-          setTimeout(() => reject(new Error('Request timed out')), timeoutMs);
-        }),
-      ]);
-    };
+    // Add timeout wrapper for Supabase auth call
+    const authPromise = supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Supabase authentication timeout')), 10000); // 10 second timeout
+    });
 
     let authData, authError;
     try {
-      const authResult = await withTimeout(
-        supabase.auth.signInWithPassword({
-          email,
-          password,
-        }),
-        10000 // 10 second timeout
-      );
-      
-      authData = authResult.data;
-      authError = authResult.error;
-      console.log('Auth result:', { hasUser: !!authData?.user, error: authError?.message });
+      const result = await Promise.race([authPromise, timeoutPromise]) as any;
+      authData = result.data;
+      authError = result.error;
     } catch (error) {
-      if (error instanceof Error && error.message.includes('timed out')) {
-        console.error('Auth request timed out');
+      if (error instanceof Error && error.message.includes('timeout')) {
+        console.error('Supabase authentication timed out');
         return NextResponse.json(
-          { error: 'Authentication request timed out. Please check your Supabase connection and try again.' },
+          { 
+            error: 'Connection timeout. Please check if your Supabase project is active and accessible.',
+            details: process.env.NODE_ENV === 'development' 
+              ? 'The Supabase project might be paused. Check your Supabase dashboard.' 
+              : undefined
+          },
           { status: 504 }
         );
       }
       console.error('Unexpected auth error:', error);
       return NextResponse.json(
-        { 
-          error: 'Authentication failed',
-          details: process.env.NODE_ENV === 'development' 
-            ? (error instanceof Error ? error.message : 'Unknown error')
-            : undefined,
-        },
+        { error: 'Authentication failed' },
         { status: 500 }
       );
     }
@@ -96,20 +89,31 @@ export async function POST(request: NextRequest) {
 
     const authUser = authData.user;
 
+    // Use service role client to check/update profile (bypasses RLS)
+    let serviceRoleClient;
+    try {
+      serviceRoleClient = await createServiceRoleClient();
+    } catch (serviceError) {
+      console.error('Failed to create service role client:', serviceError);
+      // Continue without service role - try with regular client
+    }
+
+    const clientForProfile = serviceRoleClient || supabase;
+
     // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await clientForProfile
       .from('profiles')
       .select('role')
-      .eq('id', authData.user.id)
+      .eq('id', authUser.id)
       .single();
 
     // If profile doesn't exist, create it with ADMIN role
     if (profileError && profileError.code === 'PGRST116') {
       // Profile doesn't exist, create it
-      const { error: insertError } = await supabase
+      const { error: insertError } = await clientForProfile
         .from('profiles')
         .insert({
-          id: authData.user.id,
+          id: authUser.id,
           role: 'ADMIN',
           customer_mobile: null,
         });
@@ -129,10 +133,10 @@ export async function POST(request: NextRequest) {
       );
     } else if (profile?.role !== 'ADMIN') {
       // Profile exists but not admin - update it
-      const { error: updateError } = await supabase
+      const { error: updateError } = await clientForProfile
         .from('profiles')
         .update({ role: 'ADMIN' })
-        .eq('id', authData.user.id);
+        .eq('id', authUser.id);
 
       if (updateError) {
         console.error('Failed to update profile:', updateError);
@@ -143,6 +147,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Get the session from the regular client (cookies are already set)
+    const { data: { session } } = await supabase.auth.getSession();
+
     return NextResponse.json({
       success: true,
       user: {
@@ -150,7 +157,7 @@ export async function POST(request: NextRequest) {
         email: authUser.email,
         role: 'ADMIN',
       },
-      session: authData.session,
+      session: session,
     });
   } catch (error) {
     console.error('Login error:', error);

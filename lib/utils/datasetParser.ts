@@ -10,6 +10,23 @@ export interface ParseResult {
   rowCount: number;
 }
 
+// Helper function to normalize date values - converts empty/null/"Null" strings to null
+function normalizeDate(value: any): string | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  
+  const str = String(value).trim();
+  
+  // Check for empty strings or common null representations
+  if (str === '' || str.toLowerCase() === 'null' || str.toLowerCase() === 'n/a' || str.toLowerCase() === 'na') {
+    return null;
+  }
+  
+  // Return the trimmed string if it's not empty/null
+  return str;
+}
+
 // Helper function to convert File to ArrayBuffer (works in both browser and Node.js)
 async function fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
   if (typeof FileReader !== 'undefined') {
@@ -95,18 +112,18 @@ export async function parseExcelFile(file: File): Promise<ParseResult> {
         consent_flag: normalizeConsentFlag(normalizedRow.consent_flag),
         retailer_name: String(normalizedRow.retailer_name || '').trim(),
         invoice_id: String(normalizedRow.invoice_id || '').trim(),
-        purchase_date: String(normalizedRow.purchase_date || '').trim(),
+        purchase_date: normalizeDate(normalizedRow.purchase_date),
         product_category: String(normalizedRow.product_category || '').trim(),
         product_name: String(normalizedRow.product_name || '').trim(),
         brand: String(normalizedRow.brand || '').trim(),
         model_number: String(normalizedRow.model_number || '').trim(),
         serial_number: String(normalizedRow.serial_number || '').trim(),
-        warranty_start: String(normalizedRow.warranty_start || '').trim(),
-        warranty_end: String(normalizedRow.warranty_end || '').trim(),
+        warranty_start: normalizeDate(normalizedRow.warranty_start),
+        warranty_end: normalizeDate(normalizedRow.warranty_end),
         warranty_type: String(normalizedRow.warranty_type || '').trim(),
         amc_active: normalizeAMCActive(normalizedRow.amc_active),
-        amc_end_date: normalizedRow.amc_end_date ? String(normalizedRow.amc_end_date).trim() : null,
-        next_service_due: String(normalizedRow.next_service_due || '').trim(),
+        amc_end_date: normalizeDate(normalizedRow.amc_end_date),
+        next_service_due: normalizeDate(normalizedRow.next_service_due),
         city: String(normalizedRow.city || '').trim(),
         pincode: String(normalizedRow.pincode || '').trim(),
       };
@@ -191,18 +208,18 @@ export async function parseCSVFile(file: File): Promise<ParseResult> {
         consent_flag: normalizeConsentFlag(normalizedRow.consent_flag),
         retailer_name: String(normalizedRow.retailer_name || '').trim(),
         invoice_id: String(normalizedRow.invoice_id || '').trim(),
-        purchase_date: String(normalizedRow.purchase_date || '').trim(),
+        purchase_date: normalizeDate(normalizedRow.purchase_date),
         product_category: String(normalizedRow.product_category || '').trim(),
         product_name: String(normalizedRow.product_name || '').trim(),
         brand: String(normalizedRow.brand || '').trim(),
         model_number: String(normalizedRow.model_number || '').trim(),
         serial_number: String(normalizedRow.serial_number || '').trim(),
-        warranty_start: String(normalizedRow.warranty_start || '').trim(),
-        warranty_end: String(normalizedRow.warranty_end || '').trim(),
+        warranty_start: normalizeDate(normalizedRow.warranty_start),
+        warranty_end: normalizeDate(normalizedRow.warranty_end),
         warranty_type: String(normalizedRow.warranty_type || '').trim(),
         amc_active: normalizeAMCActive(normalizedRow.amc_active),
-        amc_end_date: normalizedRow.amc_end_date ? String(normalizedRow.amc_end_date).trim() : null,
-        next_service_due: String(normalizedRow.next_service_due || '').trim(),
+        amc_end_date: normalizeDate(normalizedRow.amc_end_date),
+        next_service_due: normalizeDate(normalizedRow.next_service_due),
         city: String(normalizedRow.city || '').trim(),
         pincode: String(normalizedRow.pincode || '').trim(),
       };

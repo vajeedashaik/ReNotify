@@ -82,18 +82,18 @@ export interface DatasetRow {
   consent_flag: string | boolean;
   retailer_name: string;
   invoice_id: string;
-  purchase_date: string;
+  purchase_date: string | null;
   product_category: string;
   product_name: string;
   brand: string;
   model_number: string;
   serial_number: string;
-  warranty_start: string;
-  warranty_end: string;
+  warranty_start: string | null;
+  warranty_end: string | null;
   warranty_type: string;
   amc_active: string | boolean;
   amc_end_date: string | null;
-  next_service_due: string;
+  next_service_due: string | null;
   city: string;
   pincode: string;
 }

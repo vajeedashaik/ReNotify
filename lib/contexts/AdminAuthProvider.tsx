@@ -35,48 +35,114 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   // Check for existing session on mount
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
+    let mounted = true;
+
     const checkSession = async () => {
       try {
-        if (!supabase) {
-          setLoading(false);
+        console.log('🔍 Checking session on mount...');
+        
+        // Add timeout to prevent hanging
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session check timeout')), 5000)
+        );
+        
+        let session, sessionError;
+        try {
+          const result = await Promise.race([sessionPromise, timeoutPromise]) as any;
+          session = result?.data?.session;
+          sessionError = result?.error;
+        } catch (timeoutError) {
+          console.warn('⏱️ Session check timed out, continuing...');
+          if (mounted) setLoading(false);
           return;
         }
-
-        const { data: { session } } = await supabase.auth.getSession();
         
-        if (session?.user) {
-          // Verify user is admin
-          const { data: profile } = await supabase
+        if (sessionError) {
+          console.warn('Session error:', sessionError.message);
+        }
+        
+        if (session?.user && mounted) {
+          console.log('✅ Session found, verifying admin role...');
+          
+          // Verify user is admin with timeout
+          const profilePromise = supabase
             .from('profiles')
             .select('role')
             .eq('id', session.user.id)
             .single();
+          
+          const profileTimeout = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Profile check timeout')), 5000)
+          );
+          
+          let profile, profileError;
+          try {
+            const result = await Promise.race([profilePromise, profileTimeout]) as any;
+            profile = result?.data;
+            profileError = result?.error;
+          } catch (timeoutError) {
+            console.warn('⏱️ Profile check timed out');
+            if (mounted) setLoading(false);
+            return;
+          }
 
-          if (profile?.role === 'ADMIN') {
+          if (profileError) {
+            console.warn('Error fetching profile:', profileError.message);
+            if (mounted) setLoading(false);
+            return;
+          }
+
+          if (profile?.role === 'ADMIN' && mounted) {
+            console.log('✅ Admin user confirmed, setting user state');
             setUser({
               email: session.user.email || '',
               role: 'ADMIN',
             });
-          } else {
-            await supabase.auth.signOut();
+          } else if (mounted) {
+            console.warn('User is not admin, but session exists');
           }
+        } else if (mounted) {
+          console.log('ℹ️ No session found on mount');
         }
       } catch (error) {
         console.error('Error checking session:', error);
+        // Don't clear user state on error - might be temporary network issue
       } finally {
-        setLoading(false);
+        if (mounted) {
+          console.log('🏁 Session check completed');
+          setLoading(false);
+        }
       }
     };
 
     checkSession();
 
+    return () => {
+      mounted = false;
+    };
+
     // Listen for auth changes
     if (!supabase) return;
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔔 Auth state changed:', event, session?.user?.email || 'No user');
+      
       try {
         if (event === 'SIGNED_OUT' || !session) {
+          console.log('👋 User signed out');
           setUser(null);
+          return;
+        }
+
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('🔄 Token refreshed');
+          // Don't clear user on token refresh - session is still valid
           return;
         }
 
@@ -88,17 +154,20 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
             .single();
 
           if (profile?.role === 'ADMIN') {
+            console.log('✅ Admin user confirmed via auth state change');
             setUser({
               email: session.user.email || '',
               role: 'ADMIN',
             });
           } else {
+            console.warn('❌ User is not admin, signing out');
             setUser(null);
             await supabase.auth.signOut();
           }
         }
       } catch (error) {
         console.error('Error in auth state change:', error);
+        // Don't clear user on error - might be temporary
       }
     });
 
@@ -111,93 +180,71 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // Add timeout to prevent hanging
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-      const response = await fetch('/api/auth/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('Login failed:', errorData.error || `HTTP ${response.status}`);
+      if (!supabase) {
+        console.error('Supabase client not initialized');
         return false;
       }
 
-      const data = await response.json();
-      console.log('Login response received:', { 
-        success: data.success, 
-        successType: typeof data.success,
-        hasSession: !!data.session, 
-        hasUser: !!data.user,
-        userEmail: data.user?.email,
-        userRole: data.user?.role,
-        responseStatus: response.status,
-        fullData: JSON.stringify(data).substring(0, 200) // First 200 chars
-      });
+      console.log('Attempting to sign in user:', email);
       
-      // Check if login was successful - be more lenient with the check
-      const hasSuccessFlag = data.success === true || data.success === 'true' || data.success === 1;
-      const hasUserObject = data.user && typeof data.user === 'object';
-      const isSuccess = hasSuccessFlag && hasUserObject;
-      
-      console.log('Login check:', { hasSuccessFlag, hasUserObject, isSuccess });
-      
-      if (isSuccess) {
-        console.log('Login successful, processing...', { user: data.user });
-        
-        // Set session in Supabase client
-        if (supabase && data.session) {
-          try {
-            const sessionResult = await supabase.auth.setSession({
-              access_token: data.session.access_token,
-              refresh_token: data.session.refresh_token,
-            });
-            console.log('Session set result:', { 
-              hasSession: !!sessionResult.data?.session, 
-              error: sessionResult.error?.message 
-            });
-          } catch (sessionError) {
-            console.error('Failed to set Supabase session:', sessionError);
-            // Continue anyway - session might already be valid
-          }
-        } else {
-          console.warn('No supabase client or session data available');
+      // Use API route for authentication (more reliable, runs on server)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+
+      try {
+        const response = await fetch('/api/auth/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+          credentials: 'include',
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Login API error:', errorData.error || `HTTP ${response.status}`);
+          return false;
         }
 
-        // Set user state - this is critical for authentication
-        const userData = {
-          email: data.user.email || email, // Fallback to email from input
-          role: (data.user.role || 'ADMIN') as const,
-        };
+        const data = await response.json();
         
-        console.log('Setting user state:', userData);
-        setUser(userData);
-        
-        console.log('Login function returning TRUE');
-        return true;
-      }
+        if (!data.success || !data.user) {
+          console.error('Login failed:', data.error || 'Invalid response');
+          return false;
+        }
 
-      console.error('Login failed - conditions not met:', {
-        hasSuccess: data.success,
-        successType: typeof data.success,
-        hasUser: !!data.user,
-        userData: data.user,
-        dataKeys: Object.keys(data || {}),
-        fullResponse: data
-      });
-      return false;
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.error('Login request timed out');
-      } else {
+        console.log('Authentication successful via API, setting user state...');
+        
+        // Set user state immediately based on API response
+        // The session will sync via middleware and auth state listener
+        setUser({
+          email: data.user.email || email,
+          role: 'ADMIN',
+        });
+        
+        console.log('Login successful, user state set');
+        return true;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.error('Login request timed out after 20 seconds');
+          console.error('This usually means:');
+          console.error('1. Supabase project might be paused - check your Supabase dashboard');
+          console.error('2. Network connectivity issues');
+          console.error('3. Firewall blocking the connection');
+          return false;
+        }
+        
         console.error('Login error:', error);
+        return false;
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      if (supabase) {
+        await supabase.auth.signOut();
       }
       return false;
     }

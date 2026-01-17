@@ -1,6 +1,13 @@
 import { createBrowserClient } from '@supabase/ssr';
 
+let supabaseClient: ReturnType<typeof createBrowserClient> | null = null;
+
 export function createClient() {
+  // Return cached client if it exists (prevents creating multiple instances)
+  if (supabaseClient) {
+    return supabaseClient;
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
@@ -22,7 +29,10 @@ Current values:
   }
 
   try {
-    return createBrowserClient(supabaseUrl, supabaseAnonKey);
+    // createBrowserClient automatically handles cookies via localStorage/cookies
+    // It will persist sessions properly
+    supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
+    return supabaseClient;
   } catch (error) {
     console.error('Failed to create Supabase browser client:', error);
     throw new Error('Failed to initialize Supabase client. Please check your configuration.');

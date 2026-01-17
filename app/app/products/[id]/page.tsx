@@ -1,15 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Shield, FileCheck, Calendar, Bell } from 'lucide-react';
 import StatusBadge from '@/components/ui/StatusBadge';
 import TimelineBar from '@/components/ui/TimelineBar';
 import ActionButton from '@/components/ui/ActionButton';
 import { useCustomerAuth } from '@/lib/contexts/CustomerAuthProvider';
-import { useDataset } from '@/lib/contexts/DatasetProvider';
-import { datasetStore } from '@/lib/data/datasetStore';
-import { notFound } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 interface ProductDetailPageProps {
   params: {
@@ -19,14 +17,110 @@ interface ProductDetailPageProps {
 
 export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { user } = useCustomerAuth();
-  const { customers } = useDataset();
+  const router = useRouter();
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const customer = user ? customers.find(c => c.customer_mobile === user.mobile) : null;
-  const [customerId, productId] = params.id.split('-');
-  const product = customer ? datasetStore.getProductById(customer.id, productId) : null;
+  useEffect(() => {
+    if (user) {
+      fetchProduct();
+    }
+  }, [user, params.id]);
 
-  if (!customer || !product || customer.id !== customerId) {
-    notFound();
+  const fetchProduct = async () => {
+    try {
+      const response = await fetch('/api/customer/products');
+      if (response.ok) {
+        const data = await response.json();
+        const products = data.products || [];
+        
+        // Extract product ID from params (format: customerId-productId)
+        const productId = params.id.split('-').slice(1).join('-'); // Handle UUIDs with dashes
+        
+        // Find the product by ID
+        const foundProduct = products.find((p: any) => p.id === productId || params.id.includes(p.id));
+        
+        if (foundProduct) {
+          // Transform product to match expected format
+          const today = new Date().toISOString().split('T')[0];
+          const warrantyEnd = foundProduct.warranty_end || today;
+          const warrantyDays = Math.ceil((new Date(warrantyEnd).getTime() - new Date(today).getTime()) / (1000 * 60 * 60 * 24));
+          
+          let warrantyStatus: 'active' | 'expired' | 'expiring_soon' = 'active';
+          if (warrantyDays < 0) warrantyStatus = 'expired';
+          else if (warrantyDays <= 30) warrantyStatus = 'expiring_soon';
+
+          let amcStatus: 'active' | 'inactive' | 'expiring_soon' = 'inactive';
+          if (foundProduct.amc_active && foundProduct.amc_end_date) {
+            const amcDays = Math.ceil((new Date(foundProduct.amc_end_date).getTime() - new Date(today).getTime()) / (1000 * 60 * 60 * 24));
+            if (amcDays < 0) amcStatus = 'inactive';
+            else if (amcDays <= 30) amcStatus = 'expiring_soon';
+            else amcStatus = 'active';
+          }
+
+          const serviceDays = foundProduct.next_service_due ? 
+            Math.ceil((new Date(foundProduct.next_service_due).getTime() - new Date(today).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+
+          setProduct({
+            id: foundProduct.id,
+            product_name: foundProduct.product_name,
+            brand: foundProduct.brand,
+            model_number: foundProduct.model_number,
+            serial_number: foundProduct.serial_number,
+            retailer_name: foundProduct.retailer_name,
+            invoice_id: foundProduct.invoice_id,
+            purchase_date: foundProduct.purchase_date,
+            product_category: foundProduct.product_category,
+            warranty: {
+              warranty_type: foundProduct.warranty_type || 'Standard',
+              warranty_start: foundProduct.warranty_start || foundProduct.purchase_date,
+              warranty_end: warrantyEnd,
+              status: warrantyStatus,
+              days_remaining: warrantyDays >= 0 ? warrantyDays : undefined,
+            },
+            amc: {
+              amc_active: foundProduct.amc_active || false,
+              amc_end_date: foundProduct.amc_end_date,
+              status: amcStatus,
+              days_remaining: amcStatus === 'active' || amcStatus === 'expiring_soon' ? 
+                (foundProduct.amc_end_date ? Math.ceil((new Date(foundProduct.amc_end_date).getTime() - new Date(today).getTime()) / (1000 * 60 * 60 * 24)) : undefined) : undefined,
+            },
+            service_reminder: {
+              next_service_due: foundProduct.next_service_due || foundProduct.purchase_date,
+              days_until_due: serviceDays,
+            },
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch product:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="card text-center py-12">
+        <p className="text-gray-500">Loading product details...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    router.push('/app/login');
+    return null;
+  }
+
+  if (!product) {
+    return (
+      <div className="card text-center py-12">
+        <p className="text-gray-500">Product not found.</p>
+        <Link href="/app/products" className="mt-4 text-primary-600 hover:text-primary-700">
+          Back to Products
+        </Link>
+      </div>
+    );
   }
 
   return (

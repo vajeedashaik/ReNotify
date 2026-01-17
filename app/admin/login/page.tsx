@@ -37,11 +37,18 @@ export default function AdminLoginPage() {
         router.push('/admin');
       } else {
         console.error('Login returned false');
-        setError('Login failed. Please check your credentials and try again.');
+        // Check if it's a timeout or connection issue
+        const errorMsg = 'Login failed. Please check your credentials and ensure Supabase is properly configured.';
+        setError(errorMsg);
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Login failed. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      if (errorMessage.includes('timeout')) {
+        setError('Connection timeout. Please check your internet connection and Supabase configuration.');
+      } else {
+        setError('Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

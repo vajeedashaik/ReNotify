@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Upload, File, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useAdminAuth } from '@/lib/contexts/AdminAuthProvider';
 import ActionButton from '../ui/ActionButton';
-import { createClient } from '@/lib/supabase/client';
 
 export default function DatasetUpload() {
   const [file, setFile] = useState<File | null>(null);
@@ -17,15 +17,7 @@ export default function DatasetUpload() {
     rowCount?: number;
   } | null>(null);
   const { user } = useAdminAuth();
-  const [supabase, setSupabase] = useState<any>(null);
-
-  useEffect(() => {
-    try {
-      setSupabase(createClient());
-    } catch (error) {
-      console.error('Failed to create Supabase client:', error);
-    }
-  }, []);
+  const router = useRouter();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -48,38 +40,15 @@ export default function DatasetUpload() {
     setResult(null);
 
     try {
-      if (!supabase) {
-        setResult({
-          success: false,
-          message: 'Supabase client not initialized.',
-        });
-        setUploading(false);
-        return;
-      }
-
-      // Get current session to get user ID
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        setResult({
-          success: false,
-          message: 'You must be logged in to upload datasets.',
-        });
-        setUploading(false);
-        return;
-      }
-
-      const userId = session.user.id;
-
-      // Create form data
+      // Create form data - API will get user ID from session cookies
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('userId', userId);
 
-      // Upload to API
+      // Upload to API - user ID will be extracted from session on server
       const response = await fetch('/api/admin/upload-dataset', {
         method: 'POST',
         body: formData,
+        credentials: 'include', // Important: include cookies for session
       });
 
       const data = await response.json();
@@ -101,9 +70,9 @@ export default function DatasetUpload() {
           window.dispatchEvent(new CustomEvent('datasetUpdated'));
         }
         
-        // Navigate to dashboard
+        // Navigate to dashboard using Next.js router (preserves session)
         setTimeout(() => {
-          window.location.href = '/admin';
+          router.push('/admin');
         }, 2000);
       } else {
         setResult({

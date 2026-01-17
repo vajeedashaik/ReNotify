@@ -3,12 +3,53 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServiceRoleClient();
+    // Get user from session (using regular client to read cookies)
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabaseClient = await createClient();
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
 
-    // Get all products (admin has full access)
+    if (sessionError || !session?.user) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Please log in' },
+        { status: 401 }
+      );
+    }
+
+    const userId = session.user.id;
+
+    // Verify user is admin (using service role to bypass RLS)
+    const supabase = await createServiceRoleClient();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    if (profile?.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Unauthorized: Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    // Get user's datasets to filter products
+    const { data: userDatasets } = await supabase
+      .from('datasets')
+      .select('id')
+      .eq('uploaded_by', userId);
+
+    const datasetIds = userDatasets?.map(d => d.id) || [];
+
+    // If user has no datasets, return empty array
+    if (datasetIds.length === 0) {
+      return NextResponse.json({ invoices: [] });
+    }
+
+    // Get all products from user's datasets only
     const { data: products, error } = await supabase
       .from('customer_products')
       .select('*')
+      .in('dataset_id', datasetIds)
       .order('purchase_date', { ascending: false });
 
     if (error) {

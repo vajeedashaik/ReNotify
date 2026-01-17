@@ -32,6 +32,9 @@ export default function CustomerDashboard() {
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setKpis(statsData);
+      } else {
+        const errorData = await statsResponse.json().catch(() => ({}));
+        console.error('Failed to fetch dashboard stats:', errorData.error || 'Unknown error');
       }
 
       // Fetch products
@@ -39,6 +42,9 @@ export default function CustomerDashboard() {
       if (productsResponse.ok) {
         const productsData = await productsResponse.json();
         setProducts(productsData.products || []);
+      } else {
+        const errorData = await productsResponse.json().catch(() => ({}));
+        console.error('Failed to fetch products:', errorData.error || 'Unknown error');
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);

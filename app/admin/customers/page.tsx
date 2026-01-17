@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import CustomerCard from '@/components/ui/CustomerCard';
 import Filters from '@/components/sections/Filters';
 import { useAdminAuth } from '@/lib/contexts/AdminAuthProvider';
-import { supabaseService } from '@/lib/data/supabaseService';
 import { Customer } from '@/lib/types';
 
 export default function CustomersPage() {
@@ -24,10 +23,18 @@ export default function CustomersPage() {
 
   const fetchCustomers = async () => {
     try {
-      const data = await supabaseService.getCustomers();
-      setCustomers(data);
+      const response = await fetch('/api/admin/customers');
+      if (response.ok) {
+        const data = await response.json();
+        setCustomers(data.customers || []);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to fetch customers:', errorData.error || 'Unknown error');
+        setCustomers([]);
+      }
     } catch (error) {
       console.error('Failed to fetch customers:', error);
+      setCustomers([]);
     } finally {
       setLoading(false);
     }
@@ -102,7 +109,14 @@ export default function CustomersPage() {
         cities={cities}
       />
 
-      {filteredCustomers.length === 0 ? (
+      {filteredCustomers.length === 0 && customers.length === 0 ? (
+        <div className="card bg-blue-50 border-blue-200 text-center py-8">
+          <p className="text-blue-800 font-medium mb-2">No customers found</p>
+          <p className="text-blue-600 text-sm">
+            Upload a dataset to get started. Customers will appear here once you upload data.
+          </p>
+        </div>
+      ) : filteredCustomers.length === 0 ? (
         <div className="card text-center py-12">
           <p className="text-gray-500 text-lg">No customers found matching your filters</p>
         </div>

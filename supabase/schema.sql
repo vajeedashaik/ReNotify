@@ -33,11 +33,12 @@ CREATE TABLE IF NOT EXISTS datasets (
 -- Enable RLS on datasets
 ALTER TABLE datasets ENABLE ROW LEVEL SECURITY;
 
--- Datasets policies
-CREATE POLICY "Admins can view all datasets"
+-- Datasets policies - Admins can only see their own datasets (data isolation)
+CREATE POLICY "Admins can view their own datasets"
   ON datasets FOR SELECT
   USING (
-    EXISTS (
+    uploaded_by = auth.uid()
+    AND EXISTS (
       SELECT 1 FROM profiles
       WHERE profiles.id = auth.uid()
       AND role = 'ADMIN'
@@ -47,7 +48,8 @@ CREATE POLICY "Admins can view all datasets"
 CREATE POLICY "Admins can insert datasets"
   ON datasets FOR INSERT
   WITH CHECK (
-    EXISTS (
+    uploaded_by = auth.uid()
+    AND EXISTS (
       SELECT 1 FROM profiles
       WHERE profiles.id = auth.uid()
       AND role = 'ADMIN'
@@ -92,13 +94,19 @@ CREATE POLICY "Customers can view their own products"
     )
   );
 
-CREATE POLICY "Admins can access all customer products"
+-- Admins can only access products from their own uploaded datasets (data isolation)
+CREATE POLICY "Admins can access their own customer products"
   ON customer_products FOR ALL
   USING (
     EXISTS (
       SELECT 1 FROM profiles
       WHERE profiles.id = auth.uid()
       AND role = 'ADMIN'
+    )
+    AND EXISTS (
+      SELECT 1 FROM datasets
+      WHERE datasets.id = customer_products.dataset_id
+      AND datasets.uploaded_by = auth.uid()
     )
   );
 
