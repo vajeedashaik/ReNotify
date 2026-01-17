@@ -3,22 +3,55 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen;
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --border: 214.3 31.8% 91.4%;
   }
-  
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --border: 217.2 32.6% 17.5%;
+  }
+
   * {
     @apply scroll-smooth;
+    @apply transition-colors duration-200;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 min-h-screen text-gray-900 dark:text-gray-100;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
 @layer components {
   .card {
-    @apply bg-white rounded-card shadow-soft p-6 transition-all duration-200 hover:shadow-soft-lg;
+    @apply bg-white dark:bg-slate-800/50 rounded-card shadow-soft dark:shadow-dark-soft p-6 transition-all duration-300 hover:shadow-soft-lg dark:hover:shadow-dark-soft-lg border border-gray-100 dark:border-slate-700/50 backdrop-blur-sm;
   }
   
   .card-hover {
-    @apply hover:scale-[1.02] hover:-translate-y-1;
+    @apply hover:scale-[1.02] hover:-translate-y-1 transition-transform duration-300;
+  }
+
+  .card-glow {
+    @apply hover:shadow-glow dark:hover:shadow-glow-lg transition-shadow duration-300;
   }
   
   .scrollbar-hide {
@@ -28,5 +61,10 @@
   
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Smooth page transitions */
+  .page-transition {
+    @apply animate-fade-in;
   }
 }
