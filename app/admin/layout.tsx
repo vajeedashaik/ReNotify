@@ -3,6 +3,7 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import AdminTopBar from '@/components/layout/AdminTopBar';
+import AdminSidebar from '@/components/layout/AdminSidebar';
 import AdminRoute from '@/components/auth/AdminRoute';
 
 export default function AdminLayout({
@@ -21,10 +22,13 @@ export default function AdminLayout({
 
   return (
     <AdminRoute>
-      <AdminTopBar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
-      </main>
+      <AdminSidebar />
+      <div className="lg:ml-64 min-h-screen flex flex-col">
+        <AdminTopBar />
+        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-24 lg:pb-8 lg:pt-8">
+          {children}
+        </main>
+      </div>
     </AdminRoute>
   );
 }

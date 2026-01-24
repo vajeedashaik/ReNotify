@@ -13,23 +13,13 @@
     --border: 214.3 31.8% 91.4%;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --border: 217.2 32.6% 17.5%;
-  }
-
   * {
     @apply scroll-smooth;
     @apply transition-colors duration-200;
   }
 
   body {
-    @apply bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 min-h-screen text-gray-900 dark:text-gray-100;
+    @apply bg-gradient-to-br from-white via-blue-50/30 to-slate-50 min-h-screen text-gray-900;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -43,7 +33,7 @@
 
 @layer components {
   .card {
-    @apply bg-white dark:bg-slate-800/50 rounded-card shadow-soft dark:shadow-dark-soft p-6 transition-all duration-300 hover:shadow-soft-lg dark:hover:shadow-dark-soft-lg border border-gray-100 dark:border-slate-700/50 backdrop-blur-sm;
+    @apply bg-white rounded-card shadow-soft p-6 transition-all duration-300 hover:shadow-soft-lg border border-gray-100/80 backdrop-blur-sm;
   }
   
   .card-hover {
@@ -51,7 +41,7 @@
   }
 
   .card-glow {
-    @apply hover:shadow-glow dark:hover:shadow-glow-lg transition-shadow duration-300;
+    @apply hover:shadow-glow transition-shadow duration-300;
   }
   
   .scrollbar-hide {
@@ -63,7 +53,6 @@
     display: none;
   }
 
-  /* Smooth page transitions */
   .page-transition {
     @apply animate-fade-in;
   }
