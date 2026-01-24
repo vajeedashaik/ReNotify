@@ -5,30 +5,31 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Shield, User, ArrowRight } from 'lucide-react';
 import ActionButton from '@/components/ui/ActionButton';
+import Logo from '@/components/ui/Logo';
+import LandingBackground from '@/components/landing/LandingBackground';
 
 export default function LandingPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-accent-50">
-      <div className="max-w-4xl w-full px-4 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen flex items-center justify-center">
+      <LandingBackground />
+      <div className="relative z-10 max-w-4xl w-full px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-6">
-            <div className="p-4 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-lg">
-              <Shield className="text-white" size={48} />
-            </div>
+            <Logo width={200} height={50} />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Welcome to <span className="bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">ReNotify</span>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-sm">
+            Welcome to <span className="bg-gradient-to-r from-primary-200 to-accent-200 bg-clip-text text-transparent">ReNotify</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-primary-100/90 mb-8">
             Manage warranties, AMCs, and service reminders with ease
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Admin Card */}
-          <div className="card card-hover">
+          <div className="card card-hover bg-white/95 backdrop-blur-md border-white/20 shadow-xl">
             <div className="flex items-center space-x-4 mb-4">
               <div className="p-3 bg-primary-100 rounded-lg">
                 <Shield className="text-primary-600" size={32} />
@@ -49,7 +50,7 @@ export default function LandingPage() {
           </div>
 
           {/* Customer Card */}
-          <div className="card card-hover">
+          <div className="card card-hover bg-white/95 backdrop-blur-md border-white/20 shadow-xl">
             <div className="flex items-center space-x-4 mb-4">
               <div className="p-3 bg-accent-100 rounded-lg">
                 <User className="text-accent-600" size={32} />

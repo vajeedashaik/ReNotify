@@ -136,6 +136,31 @@ export interface ServiceCenter {
   ranking_score?: number; // Calculated field
 }
 
+// Calendar reminder: flattened from product (warranty / AMC / service)
+export type ReminderType = 'warranty' | 'amc' | 'service';
+
+export type ReminderStatus = 'active' | 'expiring_soon' | 'expired';
+
+export interface CalendarReminder {
+  id: string;
+  type: ReminderType;
+  due_date: string;
+  status: ReminderStatus;
+  days_until: number; // negative = past
+  product_id: string;
+  product_name: string;
+  brand: string;
+  model_number: string;
+  retailer_name: string;
+  customer_mobile: string;
+  consent_flag: boolean;
+  city: string;
+  pincode: string;
+  // For expiry progress
+  start_date?: string;
+  end_date: string;
+}
+
 // Service Center dataset row structure
 export interface ServiceCenterRow {
   service_center_id: string;

@@ -3,8 +3,9 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bell, Settings, Menu } from 'lucide-react';
+import { Settings, Menu } from 'lucide-react';
 import ActionButton from '../ui/ActionButton';
+import Logo from '@/components/ui/Logo';
 
 export default function TopBar() {
   const pathname = usePathname();
@@ -15,14 +16,7 @@ export default function TopBar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="p-2 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg">
-              <Bell className="text-white" size={24} />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
-              ReNotify
-            </span>
-          </Link>
+          <Logo href="/" width={140} height={36} />
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
