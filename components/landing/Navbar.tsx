@@ -18,9 +18,8 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white/80 backdrop-blur-md shadow-soft' : 'bg-transparent'
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-md shadow-soft' : 'bg-transparent'
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
@@ -37,13 +36,13 @@ export default function Navbar() {
           {/* Actions */}
           <div className="flex items-center space-x-4">
             <Link
-              href="/login"
+              href="/app/login"
               className="px-6 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
             >
               Login
             </Link>
             <Link
-              href="/login"
+              href="/app/login"
               className="px-6 py-2.5 text-sm font-medium text-white bg-slate-900 rounded-full hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             >
               Get Started

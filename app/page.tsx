@@ -4,7 +4,6 @@ import FeatureScrollAnimation from '@/components/landing/FeatureScrollAnimation'
 import CalendarScrollAnimation from '@/components/landing/CalendarScrollAnimation';
 import AutomationScrollAnimation from '@/components/landing/AutomationScrollAnimation';
 import SimplicityScrollAnimation from '@/components/landing/SimplicityScrollAnimation';
-import ProductPreview from '@/components/landing/ProductPreview';
 import CTASection from '@/components/landing/CTASection';
 
 export default function LandingPage() {
@@ -16,7 +15,6 @@ export default function LandingPage() {
       <CalendarScrollAnimation />
       <AutomationScrollAnimation />
       <SimplicityScrollAnimation />
-      <ProductPreview />
       <CTASection />
     </main>
   );
