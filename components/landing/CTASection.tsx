@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Bell, ArrowRight } from 'lucide-react';
+import { Bell, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function CTASection() {
     return (
@@ -10,25 +10,32 @@ export default function CTASection() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* Main CTA */}
-                <div className="bg-slate-900 rounded-3xl p-8 md:p-16 text-center relative overflow-hidden mb-24">
-                    <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
-                        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2" />
-                        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500 rounded-full blur-3xl transform translate-x-1/2 translate-y-1/2" />
+                <div className="text-center mb-24 max-w-3xl mx-auto">
+                    <div className="inline-flex items-center justify-center p-2 bg-blue-50 rounded-xl mb-8">
+                        <Bell className="text-blue-600 w-8 h-8" />
                     </div>
 
-                    <div className="relative z-10 max-w-2xl mx-auto">
-                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-                            Ready to get organized?
-                        </h2>
-                        <p className="text-slate-300 text-lg mb-10">
-                            Join thousands of users who never miss a warranty claim or AMC renewal.
-                            Start tracking your purchases intelligently today.
-                        </p>
+                    <h2 className="text-4xl md:text-6xl font-bold text-slate-900 mb-8 tracking-tight">
+                        Never miss an important date.
+                    </h2>
+
+                    <p className="text-slate-500 text-xl mb-12 leading-relaxed">
+                        Simple, automated, and reliable. ReNotify keeps your purchases and warranties organized so you can focus on what matters.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link
-                            href="/login"
-                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-slate-900 rounded-full font-bold hover:bg-slate-50 transition-colors shadow-lg hover:shadow-xl hover:-translate-y-1"
+                            href="/app/login"
+                            className="w-full sm:w-auto px-10 py-4 bg-slate-900 text-white rounded-full font-bold hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center justify-center gap-2"
                         >
-                            Get Started Now <ArrowRight size={20} />
+                            Get Started <ArrowRight size={20} />
+                        </Link>
+
+                        <Link
+                            href="/admin/login"
+                            className="w-full sm:w-auto px-10 py-4 bg-white text-slate-600 border border-slate-200 rounded-full font-bold hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                        >
+                            <ShieldCheck size={20} /> Admin Login
                         </Link>
                     </div>
                 </div>
