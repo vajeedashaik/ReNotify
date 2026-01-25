@@ -26,10 +26,10 @@ export default function ActionButton({
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-button transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden';
   
   const variantClasses = {
-    primary: 'bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 text-white hover:from-primary-600 hover:to-primary-700 dark:hover:from-primary-500 dark:hover:to-primary-600 shadow-md hover:shadow-glow focus:ring-primary-500',
-    secondary: 'bg-white dark:bg-slate-800 text-primary-600 dark:text-primary-400 border-2 border-primary-500 dark:border-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 focus:ring-primary-500',
-    danger: 'bg-status-expired dark:bg-status-expired-dark text-white hover:bg-red-600 dark:hover:bg-red-500 shadow-md hover:shadow-lg focus:ring-red-500',
-    ghost: 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 focus:ring-gray-500 dark:focus:ring-slate-600',
+    primary: 'bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 text-white hover:from-primary-600 hover:to-primary-700 dark:hover:from-primary-500 dark:hover:to-primary-600 shadow-md hover:shadow-glow focus:ring-primary-500 backdrop-blur-sm',
+    secondary: 'bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm text-primary-600 dark:text-primary-400 border-2 border-primary-500/30 dark:border-primary-600/30 hover:bg-white dark:hover:bg-slate-800 hover:border-primary-500 dark:hover:border-primary-600 focus:ring-primary-500',
+    danger: 'bg-status-expired dark:bg-status-expired-dark text-white hover:bg-red-600 dark:hover:bg-red-500 shadow-md hover:shadow-lg focus:ring-red-500 backdrop-blur-sm',
+    ghost: 'bg-transparent backdrop-blur-sm text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-slate-800/50 focus:ring-gray-500 dark:focus:ring-slate-600',
   };
   
   const sizeClasses = {
@@ -55,8 +55,8 @@ export default function ActionButton({
   return (
     <motion.button
       onClick={onClick}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass}`}
-      whileHover={{ scale: 1.02 }}
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} btn-hover-creative`}
+      whileHover={{ scale: 1.05, y: -2 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
     >

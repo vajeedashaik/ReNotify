@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import { Phone, Calendar, Bell, BellOff } from 'lucide-react';
+import { motion } from 'framer-motion';
 import StatusBadge from './StatusBadge';
 import ActionButton from './ActionButton';
 
@@ -51,7 +54,13 @@ export default function AlertCard({
   const isUrgent = daysUntil <= 7;
 
   return (
-    <div className={`card ${isUrgent ? 'border-2 border-status-expiring' : ''}`}>
+    <motion.div
+      className={`glass card-hover ${isUrgent ? 'border-2 border-status-expiring animate-pulse-slow' : ''}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      whileHover={{ scale: 1.02, y: -5 }}
+    >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className={`p-2 rounded-lg ${config.bgColor}`}>
@@ -99,6 +108,6 @@ export default function AlertCard({
           Snooze
         </ActionButton>
       </div>
-    </div>
+    </motion.div>
   );
 }

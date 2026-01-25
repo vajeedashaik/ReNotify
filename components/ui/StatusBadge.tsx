@@ -52,7 +52,7 @@ export default function StatusBadge({ status, label, size = 'md' }: StatusBadgeP
 
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-full border ${config.bg} ${config.text} ${config.border} ${sizeClasses[size]}`}
+      className={`inline-flex items-center font-medium rounded-full border backdrop-blur-sm transition-all duration-200 hover:scale-105 ${config.bg} ${config.text} ${config.border} ${sizeClasses[size]}`}
     >
       {label || config.defaultLabel}
     </span>

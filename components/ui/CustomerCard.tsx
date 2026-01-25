@@ -19,8 +19,10 @@ export default function CustomerCard({ id, mobile, consent, city, pincode, produ
   return (
     <Link href={`/admin/customers/${id}`}>
       <motion.div
-        className="card card-hover cursor-pointer"
-        whileHover={{ y: -2 }}
+        className="glass card-hover cursor-pointer"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -5, scale: 1.02 }}
         transition={{ duration: 0.2 }}
       >
         <div className="flex items-start justify-between mb-4">
