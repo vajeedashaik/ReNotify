@@ -96,19 +96,16 @@ export default function FeatureScrollAnimation() {
     }, [isLoading, images, smoothFrameIndex]);
 
     return (
-        <div ref={containerRef} className="relative h-[200vh] bg-white">
-            {/* Layout: Text Right, Anim Left -> flex-row-reverse if we want Anim First in HTML, or just flex-row and swap order */}
-            {/* Requirement: Zig Zag. Section 0 was Text Left. Section 1 should be Text Right, Anim Left. */}
-            {/* Mobile: Stacked. Text Top? or Anim Top? User said "Stack content vertically in a clean readable order". usually Text then Anim. */}
+        <div ref={containerRef} className="relative h-[150vh] bg-white">
+            {/* Layout: Text Right, Anim Left. 30/70 Split. */}
+            {/* Desktop: flex-row-reverse. Mobile: flex-col (Text Top? or Anim Top? User usually prefers Text Top, but layout asks for Anim prominence. We will stick to Text first on mobile for context) */}
 
-            {/* Let's do: Desktop: Anim Left (w-1/2), Text Right (w-1/2). Mobile: Text Top, Anim Bottom. */}
+            <div className="sticky top-0 h-screen w-full flex flex-col md:flex-row-reverse items-center justify-center overflow-hidden p-4 md:p-8 gap-8">
 
-            <div className="sticky top-0 h-screen w-full flex flex-col md:flex-row-reverse overflow-hidden">
-
-                {/* Text Container (Right on Desktop) */}
-                <div className="w-full md:w-1/2 flex items-center justify-center p-8 md:p-12 z-10 bg-white/90 md:bg-transparent">
+                {/* Text Container (Right - 30%) */}
+                <div className="w-full md:w-[35%] flex flex-col justify-center z-10 p-4 order-2 md:order-1">
                     <motion.div
-                        className="max-w-xl text-left md:text-left"
+                        className="max-w-lg text-left"
                         initial={{ opacity: 0, x: 30 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.8 }}
@@ -127,12 +124,14 @@ export default function FeatureScrollAnimation() {
                     </motion.div>
                 </div>
 
-                {/* Animation Container (Left on Desktop) */}
-                <div className="w-full md:w-1/2 relative h-full bg-slate-50">
-                    <canvas
-                        ref={canvasRef}
-                        className="w-full h-full object-cover"
-                    />
+                {/* Animation Card (Left - 70%) */}
+                <div className="w-full md:w-[65%] h-[50vh] md:h-[60vh] relative order-1 md:order-2">
+                    <div className="relative w-full h-full rounded-[40px] border border-slate-200 shadow-2xl overflow-hidden bg-slate-50">
+                        <canvas
+                            ref={canvasRef}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
                 </div>
 
             </div>

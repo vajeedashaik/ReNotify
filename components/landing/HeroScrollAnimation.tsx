@@ -115,12 +115,12 @@ export default function HeroScrollAnimation() {
 
 
     return (
-        <div ref={containerRef} className="relative h-[200vh] bg-white">
-            <div className="sticky top-0 h-screen w-full flex flex-col md:flex-row overflow-hidden">
+        <div ref={containerRef} className="relative h-[150vh] bg-white">
+            <div className="sticky top-0 h-screen w-full flex flex-col md:flex-row items-center justify-center overflow-hidden p-4 md:p-8 gap-8">
 
                 {/* Loading State Overlay */}
                 {isLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-blue-50 z-50">
+                    <div className="absolute inset-0 flex items-center justify-center bg-white z-50">
                         <div className="text-center">
                             <div className="mb-4 text-4xl font-bold text-blue-600 animate-pulse">{loadingProgress}%</div>
                             <div className="text-slate-500">Loading experience...</div>
@@ -128,34 +128,34 @@ export default function HeroScrollAnimation() {
                     </div>
                 )}
 
-                {/* Text Container (Left) */}
-                <div className="w-full md:w-1/2 flex items-center justify-center p-8 md:p-12 z-10 bg-white/90 md:bg-transparent">
+                {/* Text Container (Left - 30%) */}
+                <div className="w-full md:w-[35%] flex flex-col justify-center z-10 p-4 order-2 md:order-1">
                     <motion.div
-                        className="max-w-xl text-left"
+                        className="max-w-lg"
                         initial={{ opacity: 0, x: -30 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.8, delay: 0.5 }}
                     >
-                        <h1 className="text-5xl md:text-7xl font-bold text-slate-900 mb-6 tracking-tight">
+                        <h1 className="text-4xl md:text-6xl font-bold text-slate-900 mb-6 tracking-tight">
                             Never miss <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
                                 important moments.
                             </span>
                         </h1>
-                        <p className="text-xl text-slate-600 mb-10 leading-relaxed">
+                        <p className="text-lg text-slate-600 mb-8 leading-relaxed">
                             ReNotify seamlessly tracks your purchases, warranties, and service reminders so you can focus on what matters.
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4">
                             <Link
                                 href="/app/login"
-                                className="px-8 py-4 bg-slate-900 text-white rounded-full font-semibold hover:bg-slate-800 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-2"
+                                className="px-8 py-3.5 bg-slate-900 text-white rounded-full font-semibold hover:bg-slate-800 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-2"
                             >
                                 Get Started <ArrowRight size={18} />
                             </Link>
                             <Link
                                 href="/admin/login"
-                                className="px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-full font-semibold hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                                className="px-8 py-3.5 bg-white text-slate-700 border border-slate-200 rounded-full font-semibold hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
                             >
                                 <ShieldCheck size={18} /> Admin Login
                             </Link>
@@ -163,28 +163,32 @@ export default function HeroScrollAnimation() {
                     </motion.div>
                 </div>
 
-                {/* Animation Container (Right) */}
-                <div className="w-full md:w-1/2 relative h-full bg-slate-50">
-                    <canvas
-                        ref={canvasRef}
-                        className="w-full h-full object-cover"
-                    />
-                    {/* Scroll Indicator */}
-                    <motion.div
-                        className="absolute bottom-10 left-1/2 transform -translate-x-1/2 md:left-10 md:translate-x-0 text-slate-400 flex flex-col items-center gap-2 z-20"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 1.5, duration: 1 }}
-                    >
-                        <div className="w-1 h-12 bg-slate-300 rounded-full overflow-hidden">
-                            <motion.div
-                                className="w-full bg-blue-500"
-                                style={{ height: "30%" }}
-                                animate={{ y: [0, 40, 0] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                            />
-                        </div>
-                    </motion.div>
+                {/* Animation Card (Right - 70%) */}
+                <div className="w-full md:w-[65%] h-[50vh] md:h-[60vh] relative order-1 md:order-2">
+                    <div className="relative w-full h-full rounded-[40px] border border-slate-200 shadow-2xl overflow-hidden bg-slate-50">
+                        <canvas
+                            ref={canvasRef}
+                            className="w-full h-full object-cover"
+                        />
+
+                        {/* Scroll Indicator Inside Card */}
+                        <motion.div
+                            className="absolute bottom-8 left-8 text-slate-400/80 flex items-center gap-3 z-20 backdrop-blur-sm px-4 py-2 rounded-full bg-white/30"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 1.5, duration: 1 }}
+                        >
+                            <div className="w-1 h-8 bg-slate-400/30 rounded-full overflow-hidden">
+                                <motion.div
+                                    className="w-full bg-slate-600"
+                                    style={{ height: "30%" }}
+                                    animate={{ y: [0, 24, 0] }}
+                                    transition={{ duration: 2, repeat: Infinity }}
+                                />
+                            </div>
+                            <span className="text-xs font-medium uppercase tracking-widest text-slate-600">Scroll</span>
+                        </motion.div>
+                    </div>
                 </div>
 
             </div>

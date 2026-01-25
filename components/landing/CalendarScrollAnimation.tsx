@@ -96,14 +96,15 @@ export default function CalendarScrollAnimation() {
     }, [isLoading, images, smoothFrameIndex]);
 
     return (
-        <div ref={containerRef} className="relative h-[200vh] bg-white">
-            {/* Layout: Text Left, Anim Right -> flex-col, md:flex-row */}
-            <div className="sticky top-0 h-screen w-full flex flex-col md:flex-row overflow-hidden">
+        <div ref={containerRef} className="relative h-[150vh] bg-white">
+            {/* Layout: Text Left, Anim Right. 30/70 Split. */}
 
-                {/* Text Container (Left on Desktop) */}
-                <div className="w-full md:w-1/2 flex items-center justify-center p-8 md:p-12 z-10 bg-white/90 md:bg-transparent">
+            <div className="sticky top-0 h-screen w-full flex flex-col md:flex-row items-center justify-center overflow-hidden p-4 md:p-8 gap-8">
+
+                {/* Text Container (Left - 30%) */}
+                <div className="w-full md:w-[35%] flex flex-col justify-center z-10 p-4 order-2 md:order-1">
                     <motion.div
-                        className="max-w-xl text-left"
+                        className="max-w-lg text-left"
                         initial={{ opacity: 0, x: -30 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.8 }}
@@ -122,12 +123,14 @@ export default function CalendarScrollAnimation() {
                     </motion.div>
                 </div>
 
-                {/* Animation Container (Right on Desktop) */}
-                <div className="w-full md:w-1/2 relative h-full bg-slate-50">
-                    <canvas
-                        ref={canvasRef}
-                        className="w-full h-full object-cover"
-                    />
+                {/* Animation Card (Right - 70%) */}
+                <div className="w-full md:w-[65%] h-[50vh] md:h-[60vh] relative order-1 md:order-2">
+                    <div className="relative w-full h-full rounded-[40px] border border-slate-200 shadow-2xl overflow-hidden bg-slate-50">
+                        <canvas
+                            ref={canvasRef}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
                 </div>
 
             </div>
