@@ -12,9 +12,9 @@ export default function TimelineBar({ startDate, endDate, currentDate, showLabel
   const end = new Date(endDate);
   const current = currentDate ? new Date(currentDate) : new Date();
   
-  const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  const totalDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
   const elapsedDays = Math.ceil((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  const remainingDays = totalDays - elapsedDays;
+  const remainingDays = Math.max(0, totalDays - elapsedDays);
   
   const percentage = Math.max(0, Math.min(100, (elapsedDays / totalDays) * 100));
   const isExpired = current > end;

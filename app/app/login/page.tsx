@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Phone } from 'lucide-react';
+import { Phone } from 'lucide-react';
 import { useCustomerAuth } from '@/lib/contexts/CustomerAuthProvider';
 import ActionButton from '@/components/ui/ActionButton';
+import Logo from '@/components/ui/Logo';
 
 export default function CustomerLoginPage() {
   const [mobile, setMobile] = useState('');
@@ -44,9 +45,7 @@ export default function CustomerLoginPage() {
         <div className="card">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
-              <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg">
-                <User className="text-white" size={32} />
-              </div>
+              <Logo width={160} height={40} />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Customer Login</h1>
             <p className="text-gray-600">Enter your mobile number to access your account</p>

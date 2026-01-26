@@ -130,8 +130,8 @@ Use KPI cards, charts, and tables.
 - User enters mobile number
 - System checks if mobile number exists in dataset
 - consent_flag must be `YES`
-- If valid → login success
-- If not found → show informative error
+- If valid → login succe
+
 
 > No OTP implementation required initially (can be mocked).
 
