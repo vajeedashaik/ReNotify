@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { useCustomerAuth } from '@/lib/contexts/CustomerAuthProvider';
 import KPISection from '@/components/sections/KPISection';
 import { Package, Shield, FileCheck, Calendar } from 'lucide-react';
@@ -124,11 +125,20 @@ export default function CustomerDashboard() {
   });
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Dashboard</h1>
-        <p className="text-gray-600">Welcome! Here's an overview of your products and warranties.</p>
-      </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">My Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-400">Welcome! Here's an overview of your products and warranties.</p>
+      </motion.div>
 
       {/* KPI Cards */}
       <div className="mb-8">
@@ -139,24 +149,28 @@ export default function CustomerDashboard() {
             value={kpis.totalProducts}
             icon={Package}
             gradient="from-primary-500 to-primary-600"
+            index={0}
           />
           <InfoCard
             title="Active Warranties"
             value={kpis.activeWarranties}
             icon={Shield}
             gradient="from-accent-500 to-accent-600"
+            index={1}
           />
           <InfoCard
             title="Active AMCs"
             value={kpis.activeAMCs}
             icon={FileCheck}
             gradient="from-status-active to-green-600"
+            index={2}
           />
           <InfoCard
             title="Upcoming Expiries"
             value={kpis.upcomingExpiries}
             icon={Calendar}
             gradient="from-status-expiring to-orange-600"
+            index={3}
           />
         </div>
       </div>
@@ -172,8 +186,8 @@ export default function CustomerDashboard() {
           </Link>
         </div>
         <div className="space-y-4">
-          {transformedProducts.map((product) => (
-            <ProductCard key={product.id} product={product} customerId={customerId} />
+          {transformedProducts.map((product, index) => (
+            <ProductCard key={product.id} product={product} customerId={customerId} index={index} />
           ))}
           {products.length > 3 && (
             <div className="text-center pt-4">
@@ -186,6 +200,6 @@ export default function CustomerDashboard() {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

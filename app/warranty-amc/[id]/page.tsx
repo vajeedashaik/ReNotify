@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Shield, FileCheck, Calendar, RefreshCw, Bell } from 'lucide-react';

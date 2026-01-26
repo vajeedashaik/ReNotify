@@ -5,21 +5,28 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronDown, ChevronUp, Package, Calendar, Store, FileText, Tag } from 'lucide-react';
 import { Product } from '@/lib/types';
+import { motion, AnimatePresence } from 'framer-motion';
 import ActionButton from './ActionButton';
 import StatusBadge from './StatusBadge';
 
 interface ProductCardProps {
   product: Product;
   customerId: string;
+  index?: number;
 }
 
-export default function ProductCard({ product, customerId }: ProductCardProps) {
+export default function ProductCard({ product, customerId, index = 0 }: ProductCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const pathname = usePathname();
   const basePath = pathname?.startsWith('/app') ? '/app/products' : '/admin/warranty-amc';
 
   return (
-    <div className="card card-hover">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1, duration: 0.4 }}
+      className="glass card-hover group"
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
@@ -45,16 +52,34 @@ export default function ProductCard({ product, customerId }: ProductCardProps) {
             </p>
           )}
         </div>
-        <button
+        <motion.button
           onClick={() => setIsExpanded(!isExpanded)}
+ feature/scroll-down-animated-landing-page
+          className="p-2 hover:bg-white/30 dark:hover:bg-slate-700/50 rounded-lg transition-colors"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+ main
         >
-          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </button>
+          <motion.div
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ChevronDown size={20} />
+          </motion.div>
+        </motion.button>
       </div>
 
-      {isExpanded && (
-        <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-4 pt-4 border-t border-white/20 dark:border-slate-700/50 space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {product.serial_number && (
               <div className="flex items-start space-x-2">
@@ -128,7 +153,9 @@ export default function ProductCard({ product, customerId }: ProductCardProps) {
             </Link>
           </div>
         </div>
-      )}
-    </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
